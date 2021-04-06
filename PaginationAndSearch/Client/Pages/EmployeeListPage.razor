@@ -1,0 +1,107 @@
+﻿@page "/employees"
+@inject IEmployeeHttpRepository employeeRepository
+<h3>Employees</h3>
+
+
+<div class="row">
+    <div class="col-md-5">
+        <Search OnSearchChanged="SearchChanged" />
+    </div>
+    <div class="col-md-5">
+        <Sort OnSortChanged="SortChanged" />
+    </div>
+    <div class="col-md-2">
+        <a href="/createProduct">Create Employee</a>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        @if (employeeList.Count > 0)
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Login</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Gender</th>
+                        <th scope="col">Update</th>
+                        <th scope="col">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var employee in employeeList)
+                    {
+                        <tr>
+
+                            <td class="align-middle">
+                                @employee.LoginId
+                            </td>
+                            <td class="align-middle">
+                                @employee.Title
+                            </td>
+                            <td class="align-middle">
+                                $@employee.Gender
+                            </td>
+                            <td class="align-middle">
+                                <button type="button" class="btn btn-info">Update</button>
+                            </td>
+                            <td class="align-middle">
+                                <button type="button" class="btn btn-danger">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <span>
+                Loading products...
+            </span>
+        }
+
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <Pagination PageMetadata="pageMetadata" Spread="2" SelectedPage="SelectedPage" />
+    </div>
+</div>
+
+@code {
+    public List<Employee> employeeList { get; set; } = new List<Employee>();
+    public PageMetadata pageMetadata { get; set; } = new PageMetadata();
+    private EmployeeParameters employeeParameters = new EmployeeParameters();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await GetEmployees();
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        employeeParameters.PageNumber = page;
+        await GetEmployees();
+    }
+
+    private async Task GetEmployees()
+    {
+        var pagingResponse = await employeeRepository.GetEmployees(employeeParameters);
+        employeeList = pagingResponse.Items;
+        pageMetadata = pagingResponse.PageMetadata;
+    }
+
+    private async Task SearchChanged(string searchTerm)
+    {
+        Console.WriteLine(searchTerm);
+        employeeParameters.PageNumber = 1;
+        employeeParameters.SearchTerm = searchTerm;
+        await GetEmployees();
+    }
+    private async Task SortChanged(string orderBy)
+    {
+        Console.WriteLine(orderBy);
+        employeeParameters.OrderBy = orderBy;
+        await GetEmployees();
+    }
+}

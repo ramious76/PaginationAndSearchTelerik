@@ -1,0 +1,49 @@
+﻿@page "/employee/grid"
+@inject IEmployeeService  employeeService
+
+<h3>EmployeeGrid</h3>
+<br />
+<TelerikGrid Data="@GridData"
+             Height="550px"
+             TotalCount="@Total"
+             FilterMode="@GridFilterMode.FilterRow"
+             Sortable="true"
+             Pageable="true"
+             Groupable="true"
+             PageSize="20"
+             OnRead="@ReadItems">
+    <GridColumns>
+        <GridColumn Field="LoginId" FieldType="@(typeof(string))" Title="LoginId" />
+        <GridColumn Field="Title" FieldType="@(typeof(string))" />
+        <GridColumn Field="Gender" FieldType="@(typeof(string))" />
+    </GridColumns>
+</TelerikGrid>
+
+
+@code {
+    public List<object> GridData { get; set; } = new List<object>();
+    public int Total { get; set; } = 0;
+
+    protected async Task ReadItems(GridReadEventArgs args)
+    {
+        Console.WriteLine("ReadItems called");
+        DataEnvelope<Employee> result = await employeeService.GetEmployeesListAsync(args.Request);
+
+
+
+        if (args.Request.Groups.Count > 0)
+        {
+            var data = GroupDataHelpers.DeserializedGroups<Employee>(result.GroupedData);
+            GridData = data.Cast<object>().ToList();
+        }
+
+        else
+        {
+            GridData = result.CurrentPageData.Cast<object>().ToList();
+        }
+
+        Total = result.TotalItemCount;
+
+        StateHasChanged();
+    }
+}
